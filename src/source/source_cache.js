@@ -200,7 +200,7 @@ class SourceCache extends Evented {
         }
 
         function fillBorder(tile, borderTile) {
-            tile.texture = undefined;
+            tile.terrainTexture = undefined;
             let dx = borderTile.coord.x - tile.coord.x;
             const dy = borderTile.coord.y - tile.coord.y;
             const dim = Math.pow(2, tile.coord.z);
@@ -222,6 +222,7 @@ class SourceCache extends Evented {
             }
             if (!borderTile.dem || !tile.dem) return;
             tile.dem.backfillBorders(borderTile.dem, dx, dy);
+
             tile.neighboringTiles[borderTile.coord.id].backfilled = true;
         }
 
