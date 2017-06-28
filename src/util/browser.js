@@ -1,7 +1,6 @@
 // @flow
 
 const window = require('./window');
-const supported = require('mapbox-gl-supported');
 
 /**
  * @private
@@ -72,16 +71,6 @@ module.exports = {
         context.drawImage(img, 0, 0, img.width, img.height);
         return context.getImageData(0, 0, img.width, img.height).data;
     },
-
-    /**
-     * Test if the current browser supports Mapbox GL JS
-     * @param {Object} options
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=false] Return `false`
-     *   if the performance of Mapbox GL JS would be dramatically worse than
-     *   expected (i.e. a software renderer would be used)
-     * @return {boolean}
-     */
-    supported,
 
     hardwareConcurrency: window.navigator.hardwareConcurrency || 4,
 
