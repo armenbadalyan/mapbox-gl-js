@@ -193,7 +193,7 @@ class Transform {
      * @param {number} options.maxzoom
      * @param {boolean} options.roundZoom
      * @param {boolean} options.reparseOverscaled
-     * @param {boolean} options.extraBorder
+     * @param {boolean} options.renderWorldCopies
      * @returns {Array<Tile>} tiles
      */
     coveringTiles(
@@ -202,7 +202,8 @@ class Transform {
         minzoom: number,
         maxzoom: number,
         roundZoom: boolean,
-        reparseOverscaled: boolean
+        reparseOverscaled: boolean,
+        renderWorldCopies: boolean
       }
     ) {
         let z = this.coveringZoomLevel(options);
