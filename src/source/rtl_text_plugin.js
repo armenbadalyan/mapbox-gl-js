@@ -1,6 +1,6 @@
 // @flow
 
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const Evented = require('../util/evented');
 const window = require('../util/window');
 
@@ -38,7 +38,7 @@ module.exports.setRTLTextPlugin = function(pluginURL: string, callback: ErrorCal
     }
     pluginRequested = true;
     module.exports.errorCallback = callback;
-    ajax.getArrayBuffer(pluginURL, (err, response) => {
+    resourceLoader.getArrayBuffer(pluginURL, (err, response) => {
         if (err) {
             callback(err);
         } else {

@@ -1,6 +1,6 @@
 // @flow
 
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const vt = require('vector-tile');
 const Protobuf = require('pbf');
 const WorkerTile = require('./worker_tile');
@@ -33,15 +33,15 @@ export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVector
 /**
  * @private
  */
-function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback) {
-    const xhr = ajax.getArrayBuffer(params.url, (err, response) => {
+function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback, actor ) {
+    const xhr = resourceLoader.getArrayBuffer(params.url, (err, response) => {
         if (err) { return callback(err); }
         const vectorTile = new vt.VectorTile(new Protobuf(response.data));
         vectorTile.rawData = response.data;
         vectorTile.cacheControl = response.cacheControl;
         vectorTile.expires = response.expires;
         callback(err, vectorTile);
-    });
+    }, actor );
     return () => { xhr.abort(); };
 }
 
@@ -73,6 +73,9 @@ class VectorTileWorkerSource implements WorkerSource {
         this.loadVectorData = loadVectorData || loadVectorTile;
         this.loading = {};
         this.loaded = {};
+
+        console.log( "VectorTileWorkerSource::constructor(): type of mapboxgl is:", typeof mapboxgl );
+
     }
 
     /**
@@ -112,7 +115,7 @@ class VectorTileWorkerSource implements WorkerSource {
 
             this.loaded[source] = this.loaded[source] || {};
             this.loaded[source][uid] = workerTile;
-        });
+        }, this.actor );
     }
 
     /**

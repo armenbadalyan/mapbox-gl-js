@@ -1,6 +1,6 @@
 // @flow
 
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const rewind = require('geojson-rewind');
 const GeoJSONWrapper = require('./geojson_wrapper');
 const vtpbf = require('vt-pbf');
@@ -162,7 +162,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.url) {
-            ajax.getJSON(params.url, callback);
+            resourceLoader.getJSON(params.url, callback);
         } else if (typeof params.data === 'string') {
             try {
                 return callback(null, JSON.parse(params.data));

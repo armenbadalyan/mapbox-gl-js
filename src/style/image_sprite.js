@@ -1,6 +1,6 @@
 
 const Evented = require('../util/evented');
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const browser = require('../util/browser');
 const normalizeURL = require('../util/mapbox').normalizeSpriteURL;
 
@@ -25,7 +25,7 @@ class ImageSprite extends Evented {
 
         const format = this.retina ? '@2x' : '';
 
-        ajax.getJSON(normalizeURL(base, format, '.json'), (err, data) => {
+        resourceLoader.getJSON(normalizeURL(base, format, '.json'), (err, data) => {
             if (err) {
                 this.fire('error', {error: err});
                 return;
@@ -35,7 +35,7 @@ class ImageSprite extends Evented {
             if (this.imgData) this.fire('data', {dataType: 'style'});
         });
 
-        ajax.getImage(normalizeURL(base, format, '.png'), (err, img) => {
+        resourceLoader.getImage(normalizeURL(base, format, '.png'), (err, img) => {
             if (err) {
                 this.fire('error', {error: err});
                 return;
