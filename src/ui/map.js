@@ -4,7 +4,7 @@ const util = require('../util/util');
 const browser = require('../util/browser');
 const window = require('../util/window');
 const DOM = require('../util/dom');
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 
 const Style = require('../style/style');
 const AnimationLoop = require('../style/animation_loop');
@@ -162,6 +162,16 @@ class Map extends Camera {
         } else {
             this._container = options.container;
         }
+
+        /**
+        * optional local resource loader object for use in Cordova apps. 
+        */
+
+        this.localResourceLoader = options.resourceLoader;
+
+        // ugly hack. see util/resourceLoader.js.
+
+        window.localResourceLoader = options.resourceLoader;
 
         this.animationLoop = new AnimationLoop();
 
@@ -1026,7 +1036,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
      */
     loadImage(url, callback) {
-        ajax.getImage(url, callback);
+        resourceLoader.getImage(url, callback);
     }
 
     /**

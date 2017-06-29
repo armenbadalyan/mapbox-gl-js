@@ -1,5 +1,5 @@
 'use strict';
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const vt = require('vector-tile');
 const Protobuf = require('pbf');
 const WorkerTile = require('./worker_tile');
@@ -26,6 +26,9 @@ class VectorTileWorkerSource {
 
         this.loading = {};
         this.loaded = {};
+
+        console.log( "VectorTileWorkerSource::constructor(): type of mapboxgl is:", typeof mapboxgl );
+
     }
 
     /**
@@ -167,7 +170,15 @@ class VectorTileWorkerSource {
      * @param {LoadVectorDataCallback} callback
      */
     loadVectorData(params, callback) {
-        const xhr = ajax.getArrayBuffer(params.url, done.bind(this));
+
+//        const xhr = ajax.getArrayBuffer(params.url, done.bind(this));
+
+        console.log( "loadVectorData(): Before calling resourceLoader" );
+
+        const xhr = resourceLoader.getArrayBuffer( params.url, done.bind(this), this.actor );
+
+        console.log( "loadVectorData(): after calling resourceLoader" );
+
         return function abort () { xhr.abort(); };
         function done(err, response) {
             if (err) { return callback(err); }

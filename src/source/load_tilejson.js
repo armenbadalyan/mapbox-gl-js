@@ -1,6 +1,6 @@
 'use strict';
 const util = require('../util/util');
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const browser = require('../util/browser');
 const normalizeURL = require('../util/mapbox').normalizeSourceURL;
 
@@ -21,7 +21,7 @@ module.exports = function(options, callback) {
     };
 
     if (options.url) {
-        ajax.getJSON(normalizeURL(options.url), loaded);
+        resourceLoader.getJSON(normalizeURL(options.url), loaded);
     } else {
         browser.frame(loaded.bind(null, null, options));
     }

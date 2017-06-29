@@ -9,7 +9,7 @@ const GlyphSource = require('../symbol/glyph_source');
 const SpriteAtlas = require('../symbol/sprite_atlas');
 const LineAtlas = require('../render/line_atlas');
 const util = require('../util/util');
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const mapbox = require('../util/mapbox');
 const browser = require('../util/browser');
 const Dispatcher = require('../util/dispatcher');
@@ -114,7 +114,7 @@ class Style extends Evented {
         };
 
         if (typeof stylesheet === 'string') {
-            ajax.getJSON(mapbox.normalizeStyleURL(stylesheet), stylesheetLoaded);
+            resourceLoader.getJSON(mapbox.normalizeStyleURL(stylesheet), stylesheetLoaded);
         } else {
             browser.frame(stylesheetLoaded.bind(this, null, stylesheet));
         }
@@ -893,6 +893,27 @@ class Style extends Evented {
                 callback(null, allGlyphs);
         }
     }
+
+    /**
+    * load resource for web worker
+    *
+    * This gets called via a message from a web worker. 
+    *
+    * @see actor.js
+    */
+
+    loadResource( mapId, params, callback ) {
+        console.log( "style::loadResource(): got mapId '" + mapId + "' and params: ", params );
+
+        if ( ! this.map.localResourceLoader ) {
+            this.fire( 'error', 
+                {error: `No resource loader defined for local files.`});
+        }
+
+        this.map.localResourceLoader[ params.method ]( params.url, callback );
+
+    }
+
 }
 
 module.exports = Style;

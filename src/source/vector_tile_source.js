@@ -29,6 +29,8 @@ class VectorTileSource extends Evented {
         }
 
         this.setEventedParent(eventedParent);
+
+        console.log( "VectorTileSource::constructor(): type of document is:", typeof document );
     }
 
     load() {

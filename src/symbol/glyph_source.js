@@ -1,7 +1,7 @@
 'use strict';
 
 const normalizeURL = require('../util/mapbox').normalizeGlyphsURL;
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const verticalizePunctuation = require('../util/verticalize_punctuation');
 const Glyphs = require('../util/glyphs');
 const GlyphAtlas = require('../symbol/glyph_atlas');
@@ -116,7 +116,7 @@ class GlyphSource {
             const rangeName = `${range * 256}-${range * 256 + 255}`;
             const url = glyphUrl(fontstack, rangeName, this.url);
 
-            ajax.getArrayBuffer(url, (err, response) => {
+            resourceLoader.getArrayBuffer(url, (err, response) => {
                 const glyphs = !err && new Glyphs(new Protobuf(response.data));
                 for (let i = 0; i < loading[range].length; i++) {
                     loading[range][i](err, range, glyphs);
