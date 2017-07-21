@@ -56,7 +56,7 @@ class VectorTileSource extends Evented implements Source {
     load() {
         this.fire('dataloading', {dataType: 'source'});
 
-        loadTileJSON(this._options, (err, tileJSON) => {
+        loadTileJSON(this._options, (rp) => { return this.map._transformRequest(rp); }, (err, tileJSON) => {
             if (err) {
                 this.fire('error', err);
             } else if (tileJSON) {
@@ -84,8 +84,8 @@ class VectorTileSource extends Evented implements Source {
     }
 
     onAdd(map: Map) {
-        this.load();
         this.map = map;
+        this.load();
     }
 
     serialize() {
@@ -94,8 +94,9 @@ class VectorTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const overscaling = tile.coord.z > this.maxzoom ? Math.pow(2, tile.coord.z - this.maxzoom) : 1;
+        const url = normalizeURL(tile.coord.url(this.tiles, this.maxzoom, this.scheme), this.url);
         const params = {
-            url: normalizeURL(tile.coord.url(this.tiles, this.maxzoom, this.scheme), this.url),
+            request: this.map._transformRequest(url),
             uid: tile.uid,
             coord: tile.coord,
             zoom: tile.coord.z,

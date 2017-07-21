@@ -91,7 +91,7 @@ class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        ajax.getImage(this.options.url, (err, image) => {
+        ajax.getImage(this.map._transformRequest(this.url), (err, image) => {
             if (err) {
                 this.fire('error', {error: err});
             } else if (image) {
@@ -109,11 +109,8 @@ class ImageSource extends Evented implements Source {
     }
 
     onAdd(map: Map) {
-        this.load();
         this.map = map;
-        if (this.image) {
-            this.setCoordinates(this.coordinates);
-        }
+        this.load();
     }
 
     /**
@@ -182,7 +179,7 @@ class ImageSource extends Evented implements Source {
     }
 
     prepare() {
-        if (Object.keys(this.tiles).length === 0 === 0 || !this.image) return;
+        if (Object.keys(this.tiles).length === 0 || !this.image) return;
         this._prepareImage(this.map.painter.gl, this.image);
     }
 
@@ -231,7 +228,7 @@ class ImageSource extends Evented implements Source {
     serialize(): Object {
         return {
             type: 'image',
-            urls: this.url,
+            urls: this.options.url,
             coordinates: this.coordinates
         };
     }

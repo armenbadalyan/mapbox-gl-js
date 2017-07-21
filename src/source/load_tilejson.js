@@ -3,7 +3,10 @@ const ajax = require('../util/ajax');
 const browser = require('../util/browser');
 const normalizeURL = require('../util/mapbox').normalizeSourceURL;
 
-module.exports = function(options, callback) {
+module.exports = function(options, requestTransformFn, callback) {
+    if (!callback) {
+        callback = requestTransformFn;
+    }
     const loaded = function(err, tileJSON) {
         if (err) {
             return callback(err);
@@ -20,7 +23,7 @@ module.exports = function(options, callback) {
     };
 
     if (options.url) {
-        ajax.getJSON(normalizeURL(options.url), loaded);
+        ajax.getJSON(requestTransformFn(normalizeURL(options.url)), loaded);
     } else {
         browser.frame(loaded.bind(null, null, options));
     }
