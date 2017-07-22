@@ -56,7 +56,7 @@ class VectorTileSource extends Evented implements Source {
     load() {
         this.fire('dataloading', {dataType: 'source'});
 
-        loadTileJSON(this._options, (rp) => { return this.map._transformRequest(rp); }, (err, tileJSON) => {
+        loadTileJSON(this._options, (url) => { return this.map._transformRequest(url); }, (err, tileJSON) => {
             if (err) {
                 this.fire('error', err);
             } else if (tileJSON) {

@@ -1180,7 +1180,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
      */
     loadImage(url: string, callback: Function) {
-        ajax.getImage(this.transformRequest(url), callback);
+        ajax.getImage(this._transformRequest(url), callback);
     }
 
     /**

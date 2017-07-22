@@ -85,6 +85,10 @@ class Style extends Evented {
             }
         });
 
+        const transformRequest = (url) => {
+            return  this.map ? this.map._transformRequest(url) : { url: url};
+        };
+
         const stylesheetLoaded = (err, stylesheet) => {
             if (err) {
                 this.fire('error', {error: err});
@@ -103,17 +107,17 @@ class Style extends Evented {
             }
 
             if (stylesheet.sprite) {
-                this.sprite = new ImageSprite(stylesheet.sprite, this);
+                this.sprite = new ImageSprite(stylesheet.sprite, this, transformRequest);
             }
 
-            this.glyphSource = new GlyphSource(stylesheet.glyphs, options.localIdeographFontFamily, this);
+            this.glyphSource = new GlyphSource(stylesheet.glyphs, options.localIdeographFontFamily, this, transformRequest);
             this._resolve();
             this.fire('data', {dataType: 'style'});
             this.fire('style.load');
         };
 
         if (typeof stylesheet === 'string') {
-            ajax.getJSON(mapbox.normalizeStyleURL(stylesheet), stylesheetLoaded);
+            ajax.getJSON(transformRequest(mapbox.normalizeStyleURL(stylesheet)), stylesheetLoaded);
         } else {
             browser.frame(stylesheetLoaded.bind(this, null, stylesheet));
         }

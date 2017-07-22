@@ -40,6 +40,17 @@ function createGeoJSONSource() {
     };
 }
 
+class StubMap extends Evented {
+    constructor() {
+        super();
+        this.transform = new Transform();
+    }
+
+    _transformRequest(url) {
+        return { url: url };
+    }
+}
+
 test('Style', (t) => {
     t.afterEach((callback) => {
         window.restore();
@@ -106,6 +117,18 @@ test('Style', (t) => {
         window.server.respond();
     });
 
+    t.test('transforms style URL before request', (t) => {
+        window.useFakeXMLHttpRequest();
+        // window.server.respondWith('/style.json', JSON.stringify(require('../../fixtures/style')));
+        const map = new StubMap();
+        const transformSpy = t.spy(map, '_transformRequest');
+        new Style('/style.json', map);
+        // window.server.respond();
+        t.ok(transformSpy.calledOnce);
+        t.equal(transformSpy.getCall(0).args[0], '/style.json');
+        t.end();
+    });
+
     t.test('creates sources', (t) => {
         const style = new Style(util.extend(createStyleJSON(), {
             "sources": {
@@ -119,6 +142,22 @@ test('Style', (t) => {
             t.ok(style.sourceCaches['mapbox'] instanceof SourceCache);
             t.end();
         });
+    });
+
+    t.test('transforms sprite json and image URLs before request', (t) => {
+        window.useFakeXMLHttpRequest();
+        const map = new StubMap();
+        const transformSpy = t.spy(map, '_transformRequest');
+        const style = new Style(util.extend(createStyleJSON(), {
+            "sprite": "http://example.com/sprites/bright-v8"
+        }), map);
+        style.on('style.load', () => {
+            t.equal(transformSpy.callCount, 2);
+            t.equal(transformSpy.getCall(0).args[0], 'http://example.com/sprites/bright-v8.json');
+            t.equal(transformSpy.getCall(1).args[0], 'http://example.com/sprites/bright-v8.png');
+            t.end();
+        });
+
     });
 
     t.test('validates the style by default', (t) => {
@@ -383,7 +422,7 @@ test('Style#setState', (t) => {
             type: 'raster',
             url: '/tilejson.json'
         };
-        const style = new Style(initial);
+        const style = new Style(initial, new StubMap());
         style.on('style.load', () => {
             t.stub(style, 'removeSource').callsFake(() => t.fail('removeSource called'));
             t.stub(style, 'addSource').callsFake(() => t.fail('addSource called'));

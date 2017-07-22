@@ -126,7 +126,8 @@ function cached(data, callback) {
     });
 }
 
-sinon.stub(ajax, 'getJSON').callsFake((url, callback) => {
+sinon.stub(ajax, 'getJSON').callsFake((requestParameters, callback) => {
+    const url = requestParameters.url;
     if (cache[url]) return cached(cache[url], callback);
     return request(url, (error, response, body) => {
         if (!error && response.statusCode >= 200 && response.statusCode < 300) {
@@ -144,7 +145,8 @@ sinon.stub(ajax, 'getJSON').callsFake((url, callback) => {
     });
 });
 
-sinon.stub(ajax, 'getArrayBuffer').callsFake((url, callback) => {
+sinon.stub(ajax, 'getArrayBuffer').callsFake((requestParameters, callback) => {
+    const url = requestParameters.url;
     if (cache[url]) return cached(cache[url], callback);
     return request({url: url, encoding: null}, (error, response, body) => {
         if (!error && response.statusCode >= 200 && response.statusCode < 300) {
@@ -156,7 +158,8 @@ sinon.stub(ajax, 'getArrayBuffer').callsFake((url, callback) => {
     });
 });
 
-sinon.stub(ajax, 'getImage').callsFake((url, callback) => {
+sinon.stub(ajax, 'getImage').callsFake((requestParameters, callback) => {
+    const url = requestParameters.url;
     if (cache[url]) return cached(cache[url], callback);
     return request({url: url, encoding: null}, (error, response, body) => {
         if (!error && response.statusCode >= 200 && response.statusCode < 300) {

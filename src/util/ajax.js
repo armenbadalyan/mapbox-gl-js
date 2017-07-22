@@ -6,6 +6,7 @@ const window = require('./window');
  * The type of a resource.
  */
 // type ResourceType = "Unknown" | "Style" | "Source" | "Tile" | "Glyphs" | "SpriteImage" | "SpriteJSON" | "Image";
+// TODO: AHM:
 const ResourceType = {
     Unknown: Symbol('Unknown'),
     Style: Symbol('Style'),
@@ -22,15 +23,18 @@ if (typeof Object.freeze == 'function') {
 }
 
 /**
- * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks
+ * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
  * @typedef {Object} RequestParameters
- * @property {string} url The URL to be requested
- * @property {Object} headers The headers to be sent with the request
+ * @property {string} url The URL to be requested.
+ * @property {Object} headers The headers to be sent with the request.
+ * @property {Boolean} withCredentials Whether cross-site requests should be made with cookies.
  */
 export type RequestParameters = {
     url: string,
+    // TODO: AHM:
     // resourceType?: ResourceType,
-    headers?: Object
+    headers?: Object,
+    withCredentials? : Boolean
 };
 
 class AJAXError extends Error {
@@ -48,6 +52,7 @@ function makeRequest(requestParameters: RequestParameters) : XMLHttpRequest {
     for (const k in requestParameters.headers) {
         xhr.setRequestHeader(k, requestParameters.headers[k]);
     }
+    xhr.withCredentials = !!requestParameters.withCredentials;
     return xhr;
 }
 

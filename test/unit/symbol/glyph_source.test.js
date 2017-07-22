@@ -11,7 +11,7 @@ const mockTinySDF = {
 
 function createSource(t, localIdeographFontFamily) {
     const aPBF = fs.readFileSync('./test/fixtures/0-255.pbf');
-    const source = new GlyphSource("https://localhost/fonts/v1{fontstack}/{range}.pbf", localIdeographFontFamily);
+    const source = new GlyphSource("https://localhost/fonts/v1/{fontstack}/{range}.pbf", localIdeographFontFamily);
     t.stub(source, 'createTinySDF').returns(mockTinySDF);
     // It would be better to mock with FakeXMLHttpRequest, but the binary encoding
     // doesn't survive the mocking
@@ -30,6 +30,17 @@ test('GlyphSource', (t) => {
             t.notOk(err);
             t.equal(fontName, "Arial Unicode MS");
             t.equal(glyphs['55'].advance, 12);
+            t.end();
+        });
+    });
+
+    t.test('transforms glyph URL before request', (t) => {
+        const transformSpy = t.stub().callsFake((url) => { return { url: url }; });
+        const source = new GlyphSource("https://localhost/fonts/v1/{fontstack}/{range}.pbf", false, transformSpy);
+
+        source.getSimpleGlyphs("Arial Unicode MS", [55], 0, () => {
+            t.ok(transformSpy.calledOnce);
+            t.equal(transformSpy.getCall(0).args[0], "https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf");
             t.end();
         });
     });
