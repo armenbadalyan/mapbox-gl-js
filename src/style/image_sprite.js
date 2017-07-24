@@ -39,7 +39,7 @@ class ImageSprite extends Evented {
 
         const format = this.retina ? '@2x' : '';
         let url = normalizeURL(base, format, '.json');
-        const jsonRequest = transformRequestCallback ? transformRequestCallback(url) : { url: url};
+        const jsonRequest = transformRequestCallback ? transformRequestCallback(url, ajax.ResourceType.SpriteJSON) : { url: url};
         ajax.getJSON(jsonRequest, (err, data) => {
             if (err) {
                 this.fire('error', {error: err});
@@ -49,7 +49,7 @@ class ImageSprite extends Evented {
             }
         });
         url = normalizeURL(base, format, '.png');
-        const imageRequest = transformRequestCallback ? transformRequestCallback(url) : { url: url};
+        const imageRequest = transformRequestCallback ? transformRequestCallback(url, ajax.ResourceType.SpriteImage) : { url: url};
         ajax.getImage(imageRequest, (err, img) => {
             if (err) {
                 this.fire('error', {error: err});

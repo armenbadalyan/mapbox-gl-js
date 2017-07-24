@@ -85,8 +85,8 @@ class Style extends Evented {
             }
         });
 
-        const transformRequest = (url) => {
-            return  this.map ? this.map._transformRequest(url) : { url: url};
+        const transformRequest = (url, resourceType) => {
+            return  this.map ? this.map._transformRequest(url, resourceType) : { url: url};
         };
 
         const stylesheetLoaded = (err, stylesheet) => {
@@ -117,7 +117,7 @@ class Style extends Evented {
         };
 
         if (typeof stylesheet === 'string') {
-            ajax.getJSON(transformRequest(mapbox.normalizeStyleURL(stylesheet)), stylesheetLoaded);
+            ajax.getJSON(transformRequest(mapbox.normalizeStyleURL(stylesheet), ajax.ResourceType.Style), stylesheetLoaded);
         } else {
             browser.frame(stylesheetLoaded.bind(this, null, stylesheet));
         }

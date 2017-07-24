@@ -126,6 +126,7 @@ test('Style', (t) => {
         // window.server.respond();
         t.ok(transformSpy.calledOnce);
         t.equal(transformSpy.getCall(0).args[0], '/style.json');
+        t.equal(transformSpy.getCall(0).args[1], 'Style');
         t.end();
     });
 
@@ -154,7 +155,9 @@ test('Style', (t) => {
         style.on('style.load', () => {
             t.equal(transformSpy.callCount, 2);
             t.equal(transformSpy.getCall(0).args[0], 'http://example.com/sprites/bright-v8.json');
+            t.equal(transformSpy.getCall(0).args[1], 'SpriteJSON');
             t.equal(transformSpy.getCall(1).args[0], 'http://example.com/sprites/bright-v8.png');
+            t.equal(transformSpy.getCall(1).args[1], 'SpriteImage');
             t.end();
         });
 

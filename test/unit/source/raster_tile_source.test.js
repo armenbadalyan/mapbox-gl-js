@@ -37,14 +37,15 @@ test('RasterTileSource', (t) => {
             tiles: ["http://example.com/{z}/{x}/{y}.png"],
             bounds: [-47, -7, -45, -5]
         }));
-        const spy = t.spy((e) => {
+        const transformSpy = t.spy((e) => {
             return { url: e };
         });
 
-        createSource({ url: "/source.json" }, spy);
+        createSource({ url: "/source.json" }, transformSpy);
         window.server.respond();
 
-        t.ok(spy.calledWith('/source.json'));
+        t.equal(transformSpy.getCall(0).args[0], '/source.json');
+        t.equal(transformSpy.getCall(0).args[1], 'Source');
         t.end();
     });
 
@@ -114,6 +115,7 @@ test('RasterTileSource', (t) => {
                 source.loadTile(tile, () => {});
                 t.ok(transformSpy.calledOnce);
                 t.equal(transformSpy.getCall(0).args[0], 'http://example.com/10/5/5.png');
+                t.equal(transformSpy.getCall(0).args[1], 'Tile');
                 t.end();
             }
         });

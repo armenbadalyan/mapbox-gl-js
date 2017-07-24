@@ -77,7 +77,8 @@ test('VectorTileSource', (t) => {
 
         createSource({ url: "/source.json" }, transformSpy);
         window.server.respond();
-        t.ok(transformSpy.calledWith('/source.json'));
+        t.equal(transformSpy.getCall(0).args[0], '/source.json');
+        t.equal(transformSpy.getCall(0).args[1], 'Source');
         t.end();
     });
 
@@ -176,6 +177,7 @@ test('VectorTileSource', (t) => {
                 source.loadTile(tile, () => {});
                 t.ok(transformSpy.calledOnce);
                 t.equal(transformSpy.getCall(0).args[0], 'http://example.com/10/5/5.png');
+                t.equal(transformSpy.getCall(0).args[1], 'Tile');
                 t.end();
             }
         });

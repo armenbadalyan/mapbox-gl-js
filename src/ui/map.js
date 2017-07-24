@@ -34,6 +34,8 @@ type IControl = {
 }
 /* eslint-enable no-use-before-define */
 
+type ResourceTypeEnum = $Keys<typeof ajax.ResourceType>;
+
 type MapOptions = {
     hash?: boolean,
     interactive?: boolean,
@@ -608,7 +610,7 @@ class Map extends Camera {
     /**
      * @private
      */
-    _transformRequest(url: string): RequestParameters {
+    _transformRequest(url: string, resourceType?: ResourceTypeEnum): RequestParameters {
         let requestParameters: RequestParameters = {
             url: url,
             headers: {}
@@ -618,7 +620,7 @@ class Map extends Camera {
             return requestParameters;
         }
 
-        requestParameters = this._transformRequestCallback(url) || requestParameters;
+        requestParameters = this._transformRequestCallback(url, resourceType || ajax.ResourceType.Unknown) || requestParameters;
         return requestParameters;
     }
 
@@ -629,8 +631,8 @@ class Map extends Camera {
      * @function setRequestTransform
      * @param {Function} callback Callback function called with the requested URL. Return an object with a transformed URL and headers (optional)
      * @example
-     * Map.setRequestTransform( (url)=> {
-     *  if(url.startsWith('http://myHost') {
+     * Map.setRequestTransform( (url, resourceType)=> {
+     *  if(resourceType == 'Source' && url.startsWith('http://myHost') {
      *   return {
      *    url: url.replace('http', 'https'),
      *    headers: { 'withCredentials': true}
@@ -1180,7 +1182,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
      */
     loadImage(url: string, callback: Function) {
-        ajax.getImage(this._transformRequest(url), callback);
+        ajax.getImage(this._transformRequest(url, ajax.ResourceType.Image), callback);
     }
 
     /**

@@ -5,18 +5,17 @@ const window = require('./window');
 /**
  * The type of a resource.
  */
-// type ResourceType = "Unknown" | "Style" | "Source" | "Tile" | "Glyphs" | "SpriteImage" | "SpriteJSON" | "Image";
-// TODO: AHM:
 const ResourceType = {
-    Unknown: Symbol('Unknown'),
-    Style: Symbol('Style'),
-    Source: Symbol('Source'),
-    Tile: Symbol('Tile'),
-    Glyphs: Symbol('Glyphs'),
-    SpriteImage: Symbol('SpriteImage'),
-    SpriteJSON: Symbol('SpriteJSON'),
-    Image: Symbol('Image')
+    Unknown: 'Unknown',
+    Style: 'Style',
+    Source: 'Source',
+    Tile: 'Tile',
+    Glyphs: 'Glyphs',
+    SpriteImage: 'SpriteImage',
+    SpriteJSON: 'SpriteJSON',
+    Image: 'Image'
 };
+exports.ResourceType = ResourceType;
 
 if (typeof Object.freeze == 'function') {
     Object.freeze(ResourceType);
@@ -27,12 +26,10 @@ if (typeof Object.freeze == 'function') {
  * @typedef {Object} RequestParameters
  * @property {string} url The URL to be requested.
  * @property {Object} headers The headers to be sent with the request.
- * @property {Boolean} withCredentials Whether cross-site requests should be made with cookies.
+ * @property {boolean} withCredentials Whether cross-site requests should be made with cookies.
  */
 export type RequestParameters = {
     url: string,
-    // TODO: AHM:
-    // resourceType?: ResourceType,
     headers?: Object,
     withCredentials? : Boolean
 };

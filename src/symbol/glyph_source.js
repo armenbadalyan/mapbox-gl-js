@@ -149,7 +149,7 @@ class GlyphSource extends Evented {
     }
 
     loadPBF(url, callback) {
-        const request  = this.transformRequestCallback ? this.transformRequestCallback(url) : { url: url };
+        const request  = this.transformRequestCallback ? this.transformRequestCallback(url, ajax.ResourceType.Glyphs) : { url: url };
         ajax.getArrayBuffer(request, callback);
     }
 

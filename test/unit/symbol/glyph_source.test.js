@@ -1,6 +1,7 @@
 'use strict';
 
 const test = require('mapbox-gl-js-test').test;
+const ajax = require('../../../src/util/ajax');
 const GlyphSource = require('../../../src/symbol/glyph_source');
 const fs = require('fs');
 
@@ -35,10 +36,11 @@ test('GlyphSource', (t) => {
     });
 
     t.test('transforms glyph URL before request', (t) => {
+        t.stub(ajax, 'getArrayBuffer').callsFake((url, cb) => cb());
         const transformSpy = t.stub().callsFake((url) => { return { url: url }; });
-        const source = new GlyphSource("https://localhost/fonts/v1/{fontstack}/{range}.pbf", false, transformSpy);
+        const source = new GlyphSource("https://localhost/fonts/v1/{fontstack}/{range}.pbf", false, null, transformSpy);
 
-        source.getSimpleGlyphs("Arial Unicode MS", [55], 0, () => {
+        source.loadPBF("https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf", () => {
             t.ok(transformSpy.calledOnce);
             t.equal(transformSpy.getCall(0).args[0], "https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf");
             t.end();

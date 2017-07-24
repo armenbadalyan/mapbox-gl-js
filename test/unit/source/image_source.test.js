@@ -56,6 +56,7 @@ test('ImageSource', (t) => {
         source.onAdd(map);
         t.ok(spy.calledOnce);
         t.equal(spy.getCall(0).args[0], '/image.png');
+        t.equal(spy.getCall(0).args[1], 'Image');
         t.end();
     });
 
