@@ -202,7 +202,7 @@ const defaultOptions = {
  *   for locally overriding generation of glyphs in the 'CJK Unified Ideographs' and 'Hangul Syllables' ranges.
  *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
  *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (see [Use locally generated ideographs](https://www.mapbox.com/mapbox-gl-js/example/local-ideographs))
- * @param {Function} [options.transformRequest=null] Called before the Map makes a request to an external URL. Return a modified request object with modified parameters, headers, or URL.
+ * @param {Function} [options.transformRequest=null] A callback run before the Map makes a request for an external URL (see {@link Map#setRequestTransform}).
  * @example
  * var map = new mapboxgl.Map({
  *   container: 'map',
@@ -625,19 +625,23 @@ class Map extends Camera {
     }
 
     /**
-     * Sets the map's Transform request callback function
-     * The callback function can be used to modify request headers, query parmeters, or the url.
-     *
+     * Sets the map's transform request callback function.
+     * The callback can be used to modify the url, set headers, or set the withCredentials property for cross-origin requests.
+     * 
      * @function setRequestTransform
-     * @param {Function} callback Callback function called with the requested URL. Return an object with a transformed URL and headers (optional)
+     * @param {Function} callback A callback run before the Map makes a request for an external URL. Called with a url and resourceType.
+     *  Expected to return an object with a `url` property and optionally `headers` and `withCredentials` properties.
+     * 
+     * If called with no arguments, the existing callback will be removed.
+     * 
      * @example
      * Map.setRequestTransform( (url, resourceType)=> {
      *  if(resourceType == 'Source' && url.startsWith('http://myHost') {
      *   return {
      *    url: url.replace('http', 'https'),
-     *    headers: { 'withCredentials': true}
+     *    headers: { 'my-custom-header': true},
+     *    withCredentials: true
      *  }
-     *  return { url: url };
      * });
      */
     setRequestTransform(transform: Function) {
