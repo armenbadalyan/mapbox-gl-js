@@ -11,7 +11,10 @@ class AJAXError extends Error {
 exports.getJSON = function(url, callback) {
     const xhr = new window.XMLHttpRequest();
     xhr.open('GET', url, true);
+
+    xhr.withCredentials = true;
     xhr.setRequestHeader('Accept', 'application/json');
+
     xhr.onerror = function(e) {
         callback(e);
     };
@@ -35,6 +38,9 @@ exports.getJSON = function(url, callback) {
 exports.getArrayBuffer = function(url, callback) {
     const xhr = new window.XMLHttpRequest();
     xhr.open('GET', url, true);
+
+    xhr.withCredentials = true;
+
     xhr.responseType = 'arraybuffer';
     xhr.onerror = function(e) {
         callback(e);
