@@ -16,7 +16,7 @@ import type {
     TileParameters,
     RedoPlacementParameters,
     RedoPlacementCallback
-} from '../source/source';
+} from '../source/worker_source';
 
 /**
  * @private
@@ -34,6 +34,8 @@ class Worker {
     constructor(self: WorkerGlobalScope) {
         this.self = (self: any); // Needs a cast because we're going to extend it with `register*` methods.
         this.actor = new Actor(self, this);
+
+        console.log( "Worker::constructor(): top" );
 
         this.layerIndexes = {};
 
@@ -61,11 +63,11 @@ class Worker {
         };
     }
 
-    setLayers(mapId: string, layers: any) {
+    setLayers(mapId: string, layers: Array<LayerSpecification>) {
         this.getLayerIndex(mapId).replace(layers);
     }
 
-    updateLayers(mapId: string, params: {layers: any, removedIds: any, symbolOrder: any}) {
+    updateLayers(mapId: string, params: {layers: Array<LayerSpecification>, removedIds: Array<string>, symbolOrder: ?Array<string>}) {
         this.getLayerIndex(mapId).update(params.layers, params.removedIds, params.symbolOrder);
     }
 

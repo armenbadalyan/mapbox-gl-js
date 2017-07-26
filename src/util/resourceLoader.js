@@ -48,6 +48,8 @@ exports.getJSON = function( url, callback ) {
 
     if ( isLocalURL( url ) ) {
 
+        // FIXME: ugly. What is a better way to determine whether or not we're in a Web Worker?
+
         if ( typeof document == 'undefined' ) {
 
             console.log( "resourceLoader(): getJSON():  we are in a web worker." );
@@ -168,7 +170,7 @@ exports.getArrayBuffer = function(url, callback, actor ) {
 };
 
 /**
-* load an image either from a remote location of local resource provider
+* load an image from a remote location
 */
 
 exports.getImage = function(url, callback) {

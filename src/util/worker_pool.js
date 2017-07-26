@@ -19,8 +19,13 @@ class WorkerPool {
             const workerCount = require('../').workerCount;
             assert(typeof workerCount === 'number' && workerCount < Infinity);
 
+            console.log( "WorkerPool::acquire(): with mapId '" + mapId + "' and workerCount '" + workerCount + "'" );
+
             this.workers = [];
             while (this.workers.length < workerCount) {
+
+                console.log( "WorkerPool::acquire(): creating new WebWorker using class:", WebWorker );
+
                 this.workers.push(new WebWorker());
             }
         }

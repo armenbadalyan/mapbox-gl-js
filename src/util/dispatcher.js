@@ -16,7 +16,13 @@ class Dispatcher {
         this.actors = [];
         this.currentActor = 0;
         this.id = util.uniqueId();
+
+        console.log( "Dispatcher::constructor(): before workerPool.acquire" );
+
         const workers = this.workerPool.acquire(this.id);
+
+        console.log( "Dispatcher::constructor(): creating '" + workers.length + "' workers" );
+
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
             const actor = new Actor(worker, parent, this.id);

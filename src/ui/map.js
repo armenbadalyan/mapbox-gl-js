@@ -18,7 +18,7 @@ const bindHandlers = require('./bind_handlers');
 const Camera = require('./camera');
 const LngLat = require('../geo/lng_lat');
 const LngLatBounds = require('../geo/lng_lat_bounds');
-const Point = require('point-geometry');
+const Point = require('@mapbox/point-geometry');
 const AttributionControl = require('./control/attribution_control');
 const LogoControl = require('./control/logo_control');
 const isSupported = require('mapbox-gl-supported');
@@ -191,7 +191,11 @@ const defaultOptions = {
  * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {boolean} [options.renderWorldCopies=true]  If `true`, multiple copies of the world will be rendered, when zoomed out.
-  * @param {number} [options.maxTileCacheSize=null]  The maxiumum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {number} [options.maxTileCacheSize=null]  The maxiumum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {string} [options.localIdeographFontFamily=null] If specified, defines a CSS font-family
+ *   for locally overriding generation of glyphs in the 'CJK Unified Ideographs' and 'Hangul Syllables' ranges.
+ *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+ *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (see [Use locally generated ideographs](https://www.mapbox.com/mapbox-gl-js/example/local-ideographs))
  * @example
  * var map = new mapboxgl.Map({
  *   container: 'map',
@@ -270,6 +274,8 @@ class Map extends Camera {
             '_onDataLoading'
         ], this);
 
+        console.log( "Map::constructor(): setting up container and painter" );
+
         this._setupContainer();
         this._setupPainter();
 
@@ -284,6 +290,8 @@ class Map extends Camera {
             window.addEventListener('online', this._onWindowOnline, false);
             window.addEventListener('resize', this._onWindowResize, false);
         }
+
+        console.log( "Map::constructor(): binding handlers." );
 
         bindHandlers(this, options);
 
@@ -303,12 +311,17 @@ class Map extends Camera {
         this.resize();
 
         if (options.classes) this.setClasses(options.classes);
-        if (options.style) this.setStyle(options.style);
+        if (options.style) {
+            this.setStyle(options.style, { localIdeographFontFamily: options.localIdeographFontFamily });
+        }
 
         if (options.attributionControl) this.addControl(new AttributionControl());
         this.addControl(new LogoControl(), options.logoPosition);
 
         this.on('style.load', function() {
+
+            console.log( "Map::constructor on style.load" );
+
             if (this.transform.unmodified) {
                 this.jumpTo(this.style.stylesheet);
             }
@@ -938,12 +951,18 @@ class Map extends Camera {
      * @param {Object} [options]
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      *   and adding building the given one instead of attempting a diff-based update.
+     * @param {string} [options.localIdeographFontFamily=null] If non-null, defines a css font-family
+     *   for locally overriding generation of glyphs in the 'CJK Unified Ideographs' and 'Hangul Syllables'
+     *   ranges. Forces a full update.
      * @returns {Map} `this`
      * @see [Change a map's style](https://www.mapbox.com/mapbox-gl-js/example/setstyle/)
      */
-    setStyle(style: any, options?: {diff: boolean}) {
-        const shouldTryDiff = (!options || options.diff !== false) && this.style && style &&
+    setStyle(style: any, options?: {diff?: boolean, localIdeographFontFamily?: string}) {
+        const shouldTryDiff = (!options || (options.diff !== false && !options.localIdeographFontFamily)) && this.style && style &&
             !(style instanceof Style) && typeof style !== 'string';
+
+        console.log( "Map::setStyle(): top with style and options:", style, options );
+
         if (shouldTryDiff) {
             try {
                 if (this.style.setState(style)) {
@@ -969,7 +988,7 @@ class Map extends Camera {
         } else if (style instanceof Style) {
             this.style = style;
         } else {
-            this.style = new Style(style, this);
+            this.style = new Style(style, this, options);
         }
 
         this.style.setEventedParent(this, {style: this.style});
@@ -992,11 +1011,11 @@ class Map extends Camera {
         }
     }
 
-     /**
-      * Returns a Boolean indicating whether the map's style is fully loaded.
-      *
-      * @returns {boolean} A Boolean indicating whether the style is fully loaded.
-      */
+    /**
+     * Returns a Boolean indicating whether the map's style is fully loaded.
+     *
+     * @returns {boolean} A Boolean indicating whether the style is fully loaded.
+     */
     isStyleLoaded() {
         if (!this.style) return util.warnOnce('There is no style added to the map.');
         return this.style.loaded();
@@ -1112,9 +1131,9 @@ class Map extends Camera {
      * @param {number} [options.pixelRatio] The ratio of pixels in the `ArrayBufferView` image to physical pixels on the screen
      */
     addImage(
-      name: string,
-      image: HTMLImageElement | $ArrayBufferView,
-      options?: {width: number, height: number, pixelRatio: number}
+        name: string,
+        image: HTMLImageElement | $ArrayBufferView,
+        options?: {width: number, height: number, pixelRatio: number}
     ) {
         this.style.spriteAtlas.addImage(name, image, options);
     }
@@ -1963,17 +1982,17 @@ function removeNode(node) {
  * @see [Filter features within map view](https://www.mapbox.com/mapbox-gl-js/example/filter-features-within-map-view/)
  */
 
- /**
-  * Fired when an error occurs. This is GL JS's primary error reporting
-  * mechanism. We use an event instead of `throw` to better accommodate
-  * asyncronous operations. If no listeners are bound to the `error` event, the
-  * error will be printed to the console.
-  *
-  * @event error
-  * @memberof Map
-  * @instance
-  * @property {{error: {message: string}}} data
-  */
+/**
+ * Fired when an error occurs. This is GL JS's primary error reporting
+ * mechanism. We use an event instead of `throw` to better accommodate
+ * asyncronous operations. If no listeners are bound to the `error` event, the
+ * error will be printed to the console.
+ *
+ * @event error
+ * @memberof Map
+ * @instance
+ * @property {{error: {message: string}}} data
+ */
 
 /**
  * Fired when any map data loads or changes. See {@link MapDataEvent}
@@ -2038,32 +2057,32 @@ function removeNode(node) {
  * @property {MapDataEvent} data
  */
 
- /**
-  * A `MapDataEvent` object is emitted with the {@link Map.event:data}
-  * and {@link Map.event:dataloading} events. Possible values for
-  * `dataType`s are:
-  *
-  * - `'source'`: The non-tile data associated with any source
-  * - `'style'`: The [style](https://www.mapbox.com/mapbox-gl-style-spec/) used by the map
-  *
-  * @typedef {Object} MapDataEvent
-  * @property {string} type The event type.
-  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
-  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
-  * @property {Object} [source] The [style spec representation of the source](https://www.mapbox.com/mapbox-gl-style-spec/#sources) if the event has a `dataType` of `source`.
-  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
-  * that internal data has been received or changed. Possible values are `metadata` and `content`.
-  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
-  * the event is related to loading of a tile.
-  * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
-  * the event is related to loading of a tile.
-  */
+/**
+ * A `MapDataEvent` object is emitted with the {@link Map.event:data}
+ * and {@link Map.event:dataloading} events. Possible values for
+ * `dataType`s are:
+ *
+ * - `'source'`: The non-tile data associated with any source
+ * - `'style'`: The [style](https://www.mapbox.com/mapbox-gl-style-spec/) used by the map
+ *
+ * @typedef {Object} MapDataEvent
+ * @property {string} type The event type.
+ * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
+ * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
+ * @property {Object} [source] The [style spec representation of the source](https://www.mapbox.com/mapbox-gl-style-spec/#sources) if the event has a `dataType` of `source`.
+ * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
+ * that internal data has been received or changed. Possible values are `metadata` and `content`.
+ * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
+ * the event is related to loading of a tile.
+ * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
+ * the event is related to loading of a tile.
+ */
 type MapDataEvent = {
     type: string,
     dataType: string
 }
 
- /**
+/**
  * Fired immediately after the map has been removed with {@link Map.event:remove}.
  *
  * @event remove
@@ -2071,7 +2090,7 @@ type MapDataEvent = {
  * @instance
  */
 
-  /**
+/**
  * Fired immediately after the map has been resized.
  *
  * @event resize

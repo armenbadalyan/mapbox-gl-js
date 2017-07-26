@@ -19,6 +19,9 @@ class Actor {
         this.callbackID = 0;
         this.receive = this.receive.bind(this);
         this.target.addEventListener('message', this.receive, false);
+
+        console.log( "Actor::constructor(): created Actor with mapId: '" + mapId + "' and parent:", parent );
+
     }
 
     /**

@@ -2,6 +2,9 @@
 const Worker = require('../source/worker');
 
 module.exports = function () {
+
+    console.log( "web_worker(): creating message busses" );
+
     const parentListeners = [],
         workerListeners = [],
         parentBus = new MessageBus(workerListeners, parentListeners),
@@ -13,7 +16,11 @@ module.exports = function () {
     // self.importScripts for the 'loadWorkerSource' target.
     workerBus.importScripts = function () {};
 
+    console.log( "web_worker(): creating new Worker(workerBus)" );
+
     new Worker(workerBus);
+
+    console.log( "web_worker(): created parent and workBus:", workerBus, parentBus );
 
     return parentBus;
 };
