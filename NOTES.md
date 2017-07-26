@@ -36,3 +36,11 @@ Instances of Actor are present in both the main thread and the worker threads.
 
 The getGlyphs and getIcons methods appear to be in style.js in the main thread.
 
+## Git Notes
+
+To merge remote github repository into a local branch just pull the remote repository and branch.
+
+e.g.
+
+git checkout localbranch
+git pull https://github.com/mapbox/mapbox-gl-js.git 4740-per-map-transform

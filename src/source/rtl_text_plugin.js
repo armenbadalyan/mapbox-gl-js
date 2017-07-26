@@ -38,7 +38,7 @@ module.exports.setRTLTextPlugin = function(pluginURL: string, callback: ErrorCal
     }
     pluginRequested = true;
     module.exports.errorCallback = callback;
-    resourceLoader.getArrayBuffer(pluginURL, (err, response) => {
+    resourceLoader.getArrayBuffer({ url: pluginURL }, (err, response) => {
         if (err) {
             callback(err);
         } else if (response) {

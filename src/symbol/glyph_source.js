@@ -31,7 +31,7 @@ class GlyphSource extends Evented {
     /**
      * @param {string} url glyph template url
      */
-    constructor(url, localIdeographFontFamily, eventedParent) {
+    constructor(url, localIdeographFontFamily, eventedParent, transformRequestCallback) {
         super();
         this.url = url && normalizeURL(url);
         this.atlases = {};
@@ -40,6 +40,7 @@ class GlyphSource extends Evented {
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.tinySDFs = {};
         this.setEventedParent(eventedParent);
+        this.transformRequestCallback = transformRequestCallback;
     }
 
     getSimpleGlyphs(fontstack, glyphIDs, uid, callback) {
@@ -149,7 +150,8 @@ class GlyphSource extends Evented {
     }
 
     loadPBF(url, callback) {
-        resourceLoader.getArrayBuffer(url, callback );
+        const request  = this.transformRequestCallback ? this.transformRequestCallback(url, resourceLoader.ResourceType.Glyphs) : { url: url };
+        resourceLoader.getArrayBuffer(request, callback);
     }
 
     loadRange(fontstack, range, callback) {

@@ -39,9 +39,8 @@ export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVector
 /**
  * @private
  */
-
-function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback, actor ) {
-    const xhr = resourceLoader.getArrayBuffer(params.url, (err, response) => {
+function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback, actor) {
+    const xhr = resourceLoader.getArrayBuffer(params.request, (err, response) => {
         if (err) {
             callback(err);
         } else if (response) {

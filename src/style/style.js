@@ -100,11 +100,18 @@ class Style extends Evented {
 
         console.log( "Style::constructor(): after rtlTextPluginCallback" );
 
+        const transformRequest = (url, resourceType) => {
+            return  this.map ? this.map._transformRequest(url, resourceType) : { url: url};
+        };
+
         const stylesheetLoaded = (err, stylesheet) => {
 
-            console.log( "Style::constructor() on stylesheetload callback with stylesheet:", stylesheet );
+            console.log( "Style::constructor() on stylesheetload callback with stylesheet:", stylesheet, err );
 
             if (err) {
+
+                console.log( "Style::constructor() on stylesheetload callback ERRROR:", err );
+
                 this.fire('error', {error: err});
                 return;
             }
@@ -121,17 +128,17 @@ class Style extends Evented {
             }
 
             if (stylesheet.sprite) {
-                this.sprite = new ImageSprite(stylesheet.sprite, this);
+                this.sprite = new ImageSprite(stylesheet.sprite, this, transformRequest);
             }
 
-            this.glyphSource = new GlyphSource(stylesheet.glyphs, options.localIdeographFontFamily, this);
+            this.glyphSource = new GlyphSource(stylesheet.glyphs, options.localIdeographFontFamily, this, transformRequest);
             this._resolve();
             this.fire('data', {dataType: 'style'});
             this.fire('style.load');
         };
 
         if (typeof stylesheet === 'string') {
-            resourceLoader.getJSON(mapbox.normalizeStyleURL(stylesheet), stylesheetLoaded);
+            resourceLoader.getJSON(transformRequest(mapbox.normalizeStyleURL(stylesheet), resourceLoader.ResourceType.Style), stylesheetLoaded);
         } else {
             browser.frame(stylesheetLoaded.bind(this, null, stylesheet));
         }
@@ -939,7 +946,7 @@ class Style extends Evented {
                 {error: `No resource loader defined for local files.`});
         }
 
-        this.map.localResourceLoader[ params.method ]( params.url, callback );
+        this.map.localResourceLoader[ params.method ]( params, callback );
 
     }
 

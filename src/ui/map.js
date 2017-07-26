@@ -25,6 +25,7 @@ const isSupported = require('mapbox-gl-supported');
 
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
+import type {RequestParameters} from '../util/ajax';
 
 /* eslint-disable no-use-before-define */
 type IControl = {
@@ -32,6 +33,8 @@ type IControl = {
     onRemove(map: Map): void;
 }
 /* eslint-enable no-use-before-define */
+
+type ResourceTypeEnum = $Keys<typeof ajax.ResourceType>;
 
 type MapOptions = {
     hash?: boolean,
@@ -60,7 +63,8 @@ type MapOptions = {
     bearing?: number,
     pitch?: number,
     renderWorldCopies?: boolean,
-    maxTileCacheSize?: number
+    maxTileCacheSize?: number,
+    transformRequest?: Function
 };
 
 type MapEvent =
@@ -125,7 +129,9 @@ const defaultOptions = {
 
     refreshExpiredTiles: true,
 
-    maxTileCacheSize: null
+    maxTileCacheSize: null,
+
+    transformRequest: null
 };
 
 /**
@@ -196,6 +202,7 @@ const defaultOptions = {
  *   for locally overriding generation of glyphs in the 'CJK Unified Ideographs' and 'Hangul Syllables' ranges.
  *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
  *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (see [Use locally generated ideographs](https://www.mapbox.com/mapbox-gl-js/example/local-ideographs))
+ * @param {Function} [options.transformRequest=null] A callback run before the Map makes a request for an external URL (see {@link Map#setRequestTransform}).
  * @example
  * var map = new mapboxgl.Map({
  *   container: 'map',
@@ -221,6 +228,7 @@ class Map extends Camera {
     _repaint: ?boolean;
     _vertices: ?boolean;
     _canvas: HTMLCanvasElement;
+    _transformRequestCallback: Function;
 
     constructor(options: MapOptions) {
         options = util.extend({}, defaultOptions, options);
@@ -239,6 +247,7 @@ class Map extends Camera {
         this._trackResize = options.trackResize;
         this._bearingSnap = options.bearingSnap;
         this._refreshExpiredTiles = options.refreshExpiredTiles;
+        this._transformRequestCallback = options.transformRequest;
 
         if (typeof options.container === 'string') {
             this._container = window.document.getElementById(options.container);
@@ -256,6 +265,8 @@ class Map extends Camera {
         // ugly hack. see util/resourceLoader.js.
 
         window.localResourceLoader = options.resourceLoader;
+
+        console.log( "Map::constructor(): window is:", window );
 
         this.animationLoop = new AnimationLoop();
 
@@ -616,6 +627,49 @@ class Map extends Camera {
      * @returns {number} maxZoom
      */
     getMaxZoom() { return this.transform.maxZoom; }
+
+    /**
+     * @private
+     */
+    _transformRequest(url: string, resourceType?: ResourceTypeEnum): RequestParameters {
+        let requestParameters: RequestParameters = {
+            url: url,
+            headers: {}
+        };
+
+        if (!this._transformRequestCallback) {
+            return requestParameters;
+        }
+
+        requestParameters = this._transformRequestCallback(url, resourceType || ajax.ResourceType.Unknown) || requestParameters;
+        return requestParameters;
+    }
+
+    /**
+     * Sets the map's transform request callback function.
+     * The callback can be used to modify the url, set headers, or set the withCredentials property for cross-origin requests.
+     * 
+     * @function setRequestTransform
+     * @param {Function} callback A callback run before the Map makes a request for an external URL. Called with a url and resourceType.
+     *  Expected to return an object with a `url` property and optionally `headers` and `withCredentials` properties.
+     * 
+     * If called with no arguments, the existing callback will be removed.
+     * 
+     * @example
+     * Map.setRequestTransform( (url, resourceType)=> {
+     *  if(resourceType == 'Source' && url.startsWith('http://myHost') {
+     *   return {
+     *    url: url.replace('http', 'https'),
+     *    headers: { 'my-custom-header': true},
+     *    withCredentials: true
+     *  }
+     * });
+     */
+    setRequestTransform(transform: Function) {
+        if (typeof transform == 'function' || !transform) {
+            this._transformRequestCallback = transform;
+        }
+    }
 
     /**
      * Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
@@ -1156,7 +1210,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
      */
     loadImage(url: string, callback: Function) {
-        ajax.getImage(url, callback);
+        ajax.getImage(this._transformRequest(url, ajax.ResourceType.Image), callback);
     }
 
     /**

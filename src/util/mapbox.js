@@ -2,6 +2,7 @@
 
 const config = require('./config');
 const browser = require('./browser');
+const window = require('../util/window');
 
 const help = 'See https://www.mapbox.com/api-documentation/#access-tokens';
 
@@ -118,3 +119,9 @@ function formatUrl(obj: UrlObject): string {
     const params = obj.params.length ? `?${obj.params.join('&')}` : '';
     return `${obj.protocol}://${obj.authority}${obj.path}${params}`;
 }
+
+exports.resolveURL = function(url: string): string {
+    const a = window.document.createElement('a');
+    a.href = url;
+    return a.href;
+};

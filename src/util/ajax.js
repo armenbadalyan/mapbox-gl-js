@@ -2,6 +2,38 @@
 
 const window = require('./window');
 
+/**
+ * The type of a resource.
+ */
+const ResourceType = {
+    Unknown: 'Unknown',
+    Style: 'Style',
+    Source: 'Source',
+    Tile: 'Tile',
+    Glyphs: 'Glyphs',
+    SpriteImage: 'SpriteImage',
+    SpriteJSON: 'SpriteJSON',
+    Image: 'Image'
+};
+exports.ResourceType = ResourceType;
+
+if (typeof Object.freeze == 'function') {
+    Object.freeze(ResourceType);
+}
+
+/**
+ * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
+ * @typedef {Object} RequestParameters
+ * @property {string} url The URL to be requested.
+ * @property {Object} headers The headers to be sent with the request.
+ * @property {boolean} withCredentials Whether cross-site requests should be made with cookies.
+ */
+export type RequestParameters = {
+    url: string,
+    headers?: Object,
+    withCredentials? : Boolean
+};
+
 class AJAXError extends Error {
     status: number;
     constructor(message: string, status: number) {
@@ -10,11 +42,18 @@ class AJAXError extends Error {
     }
 }
 
-exports.getJSON = function(url: string, callback: Callback<mixed>) {
+function makeRequest(requestParameters: RequestParameters) : XMLHttpRequest {
     const xhr: XMLHttpRequest = new window.XMLHttpRequest();
-    xhr.open('GET', url, true);
+    xhr.open('GET', requestParameters.url, true);
+    for (const k in requestParameters.headers) {
+        xhr.setRequestHeader(k, requestParameters.headers[k]);
+    }
+    xhr.withCredentials = !!requestParameters.withCredentials;
+    return xhr;
+}
 
-    xhr.withCredentials = true;
+exports.getJSON = function(requestParameters: RequestParameters, callback: Callback<mixed>) {
+    const xhr = makeRequest(requestParameters);
     xhr.setRequestHeader('Accept', 'application/json');
     xhr.onerror = function() {
         callback(new Error(xhr.statusText));
@@ -36,12 +75,8 @@ exports.getJSON = function(url: string, callback: Callback<mixed>) {
     return xhr;
 };
 
-exports.getArrayBuffer = function(url: string, callback: Callback<{data: ArrayBuffer, cacheControl: ?string, expires: ?string}>) {
-    const xhr: XMLHttpRequest = new window.XMLHttpRequest();
-    xhr.open('GET', url, true);
-
-    xhr.withCredentials = true;
-
+exports.getArrayBuffer = function(requestParameters: RequestParameters, callback: Callback<{data: ArrayBuffer, cacheControl: ?string, expires: ?string}>) {
+    const xhr = makeRequest(requestParameters);
     xhr.responseType = 'arraybuffer';
     xhr.onerror = function() {
         callback(new Error(xhr.statusText));
@@ -73,10 +108,10 @@ function sameOrigin(url) {
 
 const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
-exports.getImage = function(url: string, callback: Callback<HTMLImageElement>) {
+exports.getImage = function(requestParameters: RequestParameters, callback: Callback<HTMLImageElement>) {
     // request the image with XHR to work around caching issues
     // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    return exports.getArrayBuffer(url, (err, imgData) => {
+    return exports.getArrayBuffer(requestParameters, (err, imgData) => {
         if (err) {
             callback(err);
         } else if (imgData) {

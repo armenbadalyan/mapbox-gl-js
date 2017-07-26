@@ -31,15 +31,16 @@ class ImageSprite extends Evented {
     imgData: ?HTMLImageElement;
     width: ?number;
 
-    constructor(base: string, eventedParent?: Evented) {
+    constructor(base: string, eventedParent?: Evented, transformRequestCallback?: Function) {
         super();
         this.base = base;
         this.retina = browser.devicePixelRatio > 1;
         this.setEventedParent(eventedParent);
 
         const format = this.retina ? '@2x' : '';
-
-        resourceLoader.getJSON(normalizeURL(base, format, '.json'), (err, data) => {
+        let url = normalizeURL(base, format, '.json');
+        const jsonRequest = transformRequestCallback ? transformRequestCallback(url, resourceLoader.ResourceType.SpriteJSON) : { url: url};
+        resourceLoader.getJSON(jsonRequest, (err, data) => {
             if (err) {
                 this.fire('error', {error: err});
             } else if (data) {
@@ -47,8 +48,9 @@ class ImageSprite extends Evented {
                 if (this.imgData) this.fire('data', {dataType: 'style'});
             }
         });
-
-        resourceLoader.getImage(normalizeURL(base, format, '.png'), (err, img) => {
+        url = normalizeURL(base, format, '.png');
+        const imageRequest = transformRequestCallback ? transformRequestCallback(url, resourceLoader.ResourceType.SpriteImage) : { url: url};
+        resourceLoader.getImage(imageRequest, (err, img) => {
             if (err) {
                 this.fire('error', {error: err});
             } else if (img) {

@@ -1,6 +1,43 @@
-'use strict';
+// @flow
 
 const ajax = require('../util/ajax');
+const window = require('./window');
+
+/*
+FIXME: I don't understand why this doesn't work.
+
+import type { ResourceType } from '../util/ajax';
+import type { RequestParameters } from '../util/ajax';
+import type { AJAXError } from '../util/ajax';
+*/
+
+
+const ResourceType = {
+    Unknown: 'Unknown',
+    Style: 'Style',
+    Source: 'Source',
+    Tile: 'Tile',
+    Glyphs: 'Glyphs',
+    SpriteImage: 'SpriteImage',
+    SpriteJSON: 'SpriteJSON',
+    Image: 'Image'
+};
+
+exports.ResourceType = ResourceType;
+
+export type RequestParameters = {
+    url: string,
+    headers?: Object,
+    withCredentials? : Boolean
+};
+
+class AJAXError extends Error {
+    status: number;
+    constructor(message: string, status: number) {
+        super(message);
+        this.status = status;
+    }
+}
 
 /**
 * resource loader
@@ -10,18 +47,9 @@ const ajax = require('../util/ajax');
 */
 
 /**
-* resource error
-*/
-
-class ResourceError extends Error {
-    constructor(message, status) {
-        super(message);
-        this.status = status;
-    }
-}
-
-/**
 * determine if a URL is a local url.
+*
+* @todo need to sync this up with the new transformRequests
 */
 
 function isLocalURL( url ) {
@@ -38,15 +66,23 @@ function isLocalURL( url ) {
 /**
 * load JSON either from a remote URL or local resource provider
 *
-* @param {string} url URL of resource.
+* The request parameters are transformed in the main thread when the
+* map is created.
+*
+* @see Map#setRequestTransform
+*
+* @param {RequestParameters} url to request along with extra headers.
+* @param {Callback} callback
+* @param {Actor} actor 
+*.
 * @return {XMLHttpRequest|MockXMLHttpRequest}
 */
 
-exports.getJSON = function( url, callback ) {
+exports.getJSON = function( requestParameters: RequestParameters, callback: Callback<mixed>, actor ) {
 
-    console.log( "resourceLoader::getJSON() - top" );
+    console.log( "resourceLoader::getJSON() - top with requestParameters:", requestParameters );
 
-    if ( isLocalURL( url ) ) {
+    if ( isLocalURL( requestParameters.url ) ) {
 
         // FIXME: ugly. What is a better way to determine whether or not we're in a Web Worker?
 
@@ -55,14 +91,14 @@ exports.getJSON = function( url, callback ) {
             console.log( "resourceLoader(): getJSON():  we are in a web worker." );
 
             if ( ! actor ) {
-                callback( new ResourceError( 'Internal Error - no actor', 404 ));
+                callback( new AJAXError( 'Internal Error - no actor', 404 ));
             }
 
-            actor.send( 'loadResource', { method: 'getJSON', url: url}, ( err, response ) => {
+            actor.send( 'loadResource', { method: 'getJSON', requestParameters: requestParameters }, ( err, response ) => {
 
                 console.log( "resourceLoader(): got response:", err, response );
 
-                if (err) { callback( new ResourceError( 'unable to load local json', 404 )); }
+                if (err) { callback( new AJAXError( 'unable to load local json', 404 )); }
 
                 try {
                     data = JSON.parse( response );
@@ -85,13 +121,16 @@ exports.getJSON = function( url, callback ) {
 
         } else {
 
-            console.log( "resourceLoader(): getJSON():  we are in a the main thread." );
+            console.log( "resourceLoader(): getJSON():  we are in a the main thread with requestParamters and window:", requestParameters, window );
 
             if ( typeof window.localResourceLoader == 'undefined' ) {
-                callback( new ResourceError( "no caller provided resourceLoader for non-http resources", 404 ));
+
+                console.log( "resourceLoader(): no localResourceLoader defined" );
+
+                callback( new AJAXError( "no caller provided resourceLoader for non-http resources", 404 ));
             }
 
-            return window.localResourceLoader.getJSON( url, callback );
+            return window.localResourceLoader.getJSON( requestParameters, callback );
 
         }
 
@@ -99,37 +138,41 @@ exports.getJSON = function( url, callback ) {
 
     console.log( "resourceLoader(): we have a normal remote URL" );
 
-    return ajax.getJSON( url, callback );
+    return ajax.getJSON( requestParameters, callback );
 
 };
 
 /**
 * request an array buffer
 *
+* @param {RequestParameters} url to request along with extra headers.
+* @param {Callback} callback
+* @param {Actor} actor 
+*
 * @return {XMLHttpRequest|MockXMLHttpRequest}
 *
 * @see style.js loadResource
 */
 
-exports.getArrayBuffer = function(url, callback, actor ) {
+exports.getArrayBuffer = function( requestParameters: RequestParameters, callback: Callback<{data: ArrayBuffer, cacheControl: ?string, expires: ?string}>, actor ) {
 
     console.log( "resourceLoader::getArrayBuffer() - top" );
 
-    if ( isLocalURL( url ) ) {
+    if ( isLocalURL( requestParameters.url ) ) {
 
         if ( typeof document == 'undefined' ) {
 
             console.log( "resourceLoader(): getArrayBuffer():  we are in a web worker." );
 
             if ( ! actor ) {
-                callback( new ResourceError( 'Internal Error - no actor', 404 ));
+                callback( new AJAXError( 'Internal Error - no actor', 404 ));
             }
 
-            actor.send( 'loadResource', { method: 'getArrayBuffer', url: url }, ( err, response ) => {
+            actor.send( 'loadResource', { method: 'getArrayBuffer', requestParameters: requestParameters }, ( err, response ) => {
 
                 console.log( "resourceLoader::getArrayBuffer got response:", err, response );
 
-                if (err) { callback( new ResourceError( 'unable to load array buffer', 404 )); }
+                if (err) { callback( new AJAXError( 'unable to load array buffer', 404 )); }
 
                 callback( null, {
                     data: response,
@@ -154,10 +197,10 @@ exports.getArrayBuffer = function(url, callback, actor ) {
             console.log( "resourceLoader(): getArrayBuf():  we are in a the main thread. Type of window.localResourceLoader is:", typeof window.localResourceLoader  );
 
             if ( typeof window.localResourceLoader == 'undefined' ) {
-                callback( new ResourceError( "unimplemented", 404 ));
+                callback( new AJAXError( "unimplemented", 404 ));
             }
 
-            return window.localResourceLoader.getArrayBuffer( url, callback );
+            return window.localResourceLoader.getArrayBuffer( requestParameters, callback );
 
         }
 
@@ -165,7 +208,7 @@ exports.getArrayBuffer = function(url, callback, actor ) {
 
     console.log( "resourceLoader(): we have a normal remote URL" );
 
-    return ajax.getArrayBuffer( url, callback );
+    return ajax.getArrayBuffer( requestParameters, callback );
 
 };
 
@@ -173,9 +216,9 @@ exports.getArrayBuffer = function(url, callback, actor ) {
 * load an image from a remote location
 */
 
-exports.getImage = function(url, callback) {
+exports.getImage = function(requestParameters: RequestParameters, callback: Callback<HTMLImageElement>) {
     console.log( "resourceLoader::getImage() - top" );
-    return ajax.getImage( url, callback );
+    return ajax.getImage( requestParameters, callback );
 };
 
 
@@ -187,6 +230,8 @@ exports.getImage = function(url, callback) {
 * @return {HTMLElement}
 */
 
-exports.getVideo = function(urls, callback) {
+exports.getVideo = function( urls: Array<string>, callback: Callback<HTMLVideoElement> ) {
     return ajax.getVideo( urls, callback );
 };
+
+// END
