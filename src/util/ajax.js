@@ -43,7 +43,7 @@ exports.getArrayBuffer = function(url, callback) {
         if (xhr.response.byteLength === 0 && xhr.status === 200) {
             return callback(new Error('http status 200 returned without content.'));
         }
-        if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.response || xhr.status === 0 && xhr.response) {
             callback(null, {
                 data: xhr.response,
                 cacheControl: xhr.getResponseHeader('Cache-Control'),
@@ -76,6 +76,9 @@ exports.getImage = function(url, callback) {
             callback(null, img);
             URL.revokeObjectURL(img.src);
         };
+        img.onerror = (err) => {
+            console.log(err);
+        }
         const blob = new window.Blob([new Uint8Array(imgData.data)], { type: 'image/png' });
         img.cacheControl = imgData.cacheControl;
         img.expires = imgData.expires;
