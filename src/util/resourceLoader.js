@@ -42,23 +42,17 @@ function isLocalURL( url ) {
 * @return {XMLHttpRequest|MockXMLHttpRequest}
 */
 
-exports.getJSON = function( url, callback ) {
-
-    console.log( "resourceLoader::getJSON() - top" );
+exports.getJSON = function( url, callback ) {    
 
     if ( isLocalURL( url ) ) {
 
         if ( typeof document == 'undefined' ) {
-
-            console.log( "resourceLoader(): getJSON():  we are in a web worker." );
 
             if ( ! actor ) {
                 callback( new ResourceError( 'Internal Error - no actor', 404 ));
             }
 
             actor.send( 'loadResource', { method: 'getJSON', url: url}, ( err, response ) => {
-
-                console.log( "resourceLoader(): got response:", err, response );
 
                 if (err) { callback( new ResourceError( 'unable to load local json', 404 )); }
 
@@ -83,8 +77,6 @@ exports.getJSON = function( url, callback ) {
 
         } else {
 
-            console.log( "resourceLoader(): getJSON():  we are in a the main thread." );
-
             if ( typeof window.localResourceLoader == 'undefined' ) {
                 callback( new ResourceError( "no caller provided resourceLoader for non-http resources", 404 ));
             }
@@ -94,8 +86,6 @@ exports.getJSON = function( url, callback ) {
         }
 
     }
-
-    console.log( "resourceLoader(): we have a normal remote URL" );
 
     return ajax.getJSON( url, callback );
 
@@ -111,21 +101,15 @@ exports.getJSON = function( url, callback ) {
 
 exports.getArrayBuffer = function(url, callback, actor ) {
 
-    console.log( "resourceLoader::getArrayBuffer() - top" );
-
     if ( isLocalURL( url ) ) {
 
         if ( typeof document == 'undefined' ) {
-
-            console.log( "resourceLoader(): getArrayBuffer():  we are in a web worker." );
 
             if ( ! actor ) {
                 callback( new ResourceError( 'Internal Error - no actor', 404 ));
             }
 
             actor.send( 'loadResource', { method: 'getArrayBuffer', url: url }, ( err, response ) => {
-
-                console.log( "resourceLoader::getArrayBuffer got response:", err, response );
 
                 if (err) { callback( new ResourceError( 'unable to load array buffer', 404 )); }
 
@@ -149,7 +133,6 @@ exports.getArrayBuffer = function(url, callback, actor ) {
             };
 
         } else {
-            console.log( "resourceLoader(): getArrayBuf():  we are in a the main thread. Type of window.localResourceLoader is:", typeof window.localResourceLoader  );
 
             if ( typeof window.localResourceLoader == 'undefined' ) {
                 callback( new ResourceError( "unimplemented", 404 ));
@@ -161,8 +144,6 @@ exports.getArrayBuffer = function(url, callback, actor ) {
 
     }
 
-    console.log( "resourceLoader(): we have a normal remote URL" );
-
     return ajax.getArrayBuffer( url, callback );
 
 };
@@ -172,7 +153,6 @@ exports.getArrayBuffer = function(url, callback, actor ) {
 */
 
 exports.getImage = function(url, callback) {
-    console.log( "resourceLoader::getImage() - top" );
     return ajax.getImage( url, callback );
 };
 
