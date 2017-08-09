@@ -158,6 +158,9 @@ class GeolocateControl extends Evented {
         }
 
         this.fire('geolocate', position);
+
+        this._updateDebugInfo(position);
+
         this._finish();
     }
 
@@ -277,6 +280,8 @@ class GeolocateControl extends Evented {
                 }
             });
         }
+
+        this._debugBox = DOM.create('span','', this._container);
     }
 
     _onClickGeolocate() {
@@ -374,6 +379,13 @@ class GeolocateControl extends Evented {
         if (this.options.showUserLocation) {
             this._updateMarker(null);
         }
+    }
+
+    _updateDebugInfo(position) {
+        this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
+                             Floor: ${position.coords.floor}, Accuracy: ${position.coords.accuracy}, 
+                             Alt accuracy: ${position.coords.altitudeAccuracy}, Heading: ${position.coords.heading}, 
+                             Speed: ${position.coords.speed}`;
     }
 }
 

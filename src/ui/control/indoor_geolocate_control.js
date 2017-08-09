@@ -9,11 +9,10 @@ const Marker = require('../marker');
 
 const defaultOptions = {
     positionOptions: {
-        enableHighAccuracy: false,
         timeout: 6000 /* 6 sec */
     },
     fitBoundsOptions: {
-        maxZoom: 15
+        maxZoom: 22
     },
     trackUserLocation: false,
     showUserLocation: true
@@ -63,6 +62,8 @@ class IndoorGeolocateControl extends Evented {
     constructor(options) {
         super();
         this.options = util.extend({}, defaultOptions, options);
+        this._lastKnownFloor = -1;
+
 
         util.bindAll([
             '_onSuccess',
@@ -103,7 +104,8 @@ class IndoorGeolocateControl extends Evented {
             // keep a record of the position so that if the state is BACKGROUND and the user
             // clicks the button, we can move to ACTIVE_LOCK immediately without waiting for
             // watchPosition to trigger _onSuccess
-            this._lastKnownPosition = position;
+            
+            this._lastKnownPosition = position;   
 
             switch (this._watchState) {
             case 'WAITING_ACTIVE':
@@ -142,6 +144,14 @@ class IndoorGeolocateControl extends Evented {
         }
 
         this.fire('geolocate', position);
+
+        if (this._lastKnownFloor !== position.coords.floor) {
+            this._lastKnownFloor = position.coords.floor;
+            this.fire('floorchanged', { floor: position.coords.floor });
+        }
+
+        this._updateDebugInfo(position);
+        
         this._finish();
     }
 
@@ -261,6 +271,8 @@ class IndoorGeolocateControl extends Evented {
                 }
             });
         }
+
+        this._debugBox = DOM.create('span','', this._container);
     }
 
     _onClickGeolocate() {
@@ -359,6 +371,14 @@ class IndoorGeolocateControl extends Evented {
             this._updateMarker(null);
         }
     }
+
+    _updateDebugInfo(position) {
+        this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
+                             Floor: ${position.coords.floor}, Accuracy: ${position.coords.accuracy}, 
+                             Alt accuracy: ${position.coords.altitudeAccuracy}, Heading: ${position.coords.heading}, 
+                             Speed: ${position.coords.speed}`;
+    }
+
 }
 
 module.exports = IndoorGeolocateControl;
