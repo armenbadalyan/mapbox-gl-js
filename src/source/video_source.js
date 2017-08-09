@@ -1,5 +1,5 @@
 
-const ajax = require('../util/ajax');
+const resourceLoader = require('../util/resourceLoader');
 const ImageSource = require('./image_source');
 
 /**
@@ -47,7 +47,7 @@ class VideoSource extends ImageSource {
         const options = this.options;
         this.urls = options.urls;
 
-        ajax.getVideo(options.urls, (err, video) => {
+        resourceLoader.getVideo(options.urls, (err, video) => {
             if (err) return this.fire('error', {error: err});
 
             this.video = video;
