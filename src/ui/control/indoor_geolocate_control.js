@@ -6,7 +6,7 @@ const util = require('../../util/util');
 const assert = require('assert');
 const LngLat = require('../../geo/lng_lat');
 const Marker = require('../marker');
-const lodash = require('lodash');
+const _ = require('lodash');
 
 const defaultOptions = {
     positionOptions: {
@@ -132,7 +132,7 @@ class IndoorGeolocateControl extends Evented {
         }
 
         // if showUserLocation and the watch state isn't off then update the marker location
-        this._updateMarkerDebounce = lodash.debounce(this._updateMarker, 1000);
+        this._updateMarkerDebounce = _.debounce(this._updateMarker, 1000);
         if (this.options.showUserLocation && this._watchState !== 'OFF') {
         	this._updateMarkerDebounce(position);
         }
@@ -375,7 +375,7 @@ class IndoorGeolocateControl extends Evented {
         if (this.options.showUserLocation) {
             this._updateMarker(null);
         }
-        this.fire('geolocateStoped', {});
+        this.fire('geolocateStopped', {});
     }
 
     _updateDebugInfo(position) {
