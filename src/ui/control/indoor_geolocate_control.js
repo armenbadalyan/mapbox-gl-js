@@ -6,6 +6,7 @@ const util = require('../../util/util');
 const assert = require('assert');
 const LngLat = require('../../geo/lng_lat');
 const Marker = require('../marker');
+const _ = require('lodash');
 
 const defaultOptions = {
     positionOptions: {
@@ -62,7 +63,8 @@ class IndoorGeolocateControl extends Evented {
     constructor(options) {
         super();
         this.options = util.extend({}, defaultOptions, options);
-        this._lastKnownFloor = -1;
+        this.options.fitBoundsOptions = util.extend({}, defaultOptions, options);
+        this._lastKnownFloor = 0;
 
 
         util.bindAll([
@@ -105,7 +107,8 @@ class IndoorGeolocateControl extends Evented {
             // clicks the button, we can move to ACTIVE_LOCK immediately without waiting for
             // watchPosition to trigger _onSuccess
             
-            this._lastKnownPosition = position;   
+            this._lastKnownPosition = position; 
+            position.floor =  position.coords.floor; 
 
             switch (this._watchState) {
             case 'WAITING_ACTIVE':
@@ -129,8 +132,9 @@ class IndoorGeolocateControl extends Evented {
         }
 
         // if showUserLocation and the watch state isn't off then update the marker location
+        this._updateMarkerDebounce = _.debounce(this._updateMarker, 1000);
         if (this.options.showUserLocation && this._watchState !== 'OFF') {
-            this._updateMarker(position);
+        	this._updateMarkerDebounce(position);
         }
 
         // if in normal mode (not watch mode), or if in watch mode and the state is active watch
@@ -367,9 +371,11 @@ class IndoorGeolocateControl extends Evented {
         this._geolocateButton.classList.remove('mapboxgl-ctrl-geolocate-waiting');
         this._geolocateButton.setAttribute('aria-pressed', false);
 
+
         if (this.options.showUserLocation) {
             this._updateMarker(null);
         }
+        this.fire('geolocateStopped', {});
     }
 
     _updateDebugInfo(position) {
