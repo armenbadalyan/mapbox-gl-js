@@ -107,13 +107,11 @@ module.exports = function bindHandlers(map, options) {
     }
 
     function onClick(e) {
-        /*const pos = DOM.mousePos(el, e);
+        const pos = DOM.mousePos(el, e);
 
         if (pos.equals(startPos)) {
             fireMouseEvent('click', e);
-        }*/
-        fireMouseEvent('click', e);
-        e.preventDefault();
+        }
     }
 
     function onDblClick(e) {
