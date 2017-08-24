@@ -115,19 +115,10 @@ class GeolocateControl extends Evented {
     }
 
     _onSuccess(position) {
-        //mock position for debug
-        if (this.options.mockPosition && this.options.mockPosition.coords && this.options.mockPosition.floor) {
-            position.coords.latitude = this.options.mockPosition.coords[0];
-            position.coords.longitude = this.options.mockPosition.coords[1];           
-            position.floor = this.options.mockPosition.floor;
-        }
-
         if (this.options.trackUserLocation) {
             // keep a record of the position so that if the state is BACKGROUND and the user
             // clicks the button, we can move to ACTIVE_LOCK immediately without waiting for
             // watchPosition to trigger _onSuccess
-
-
             this._lastKnownPosition = position;
 
             switch (this._watchState) {
