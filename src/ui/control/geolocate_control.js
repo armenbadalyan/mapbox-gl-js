@@ -115,10 +115,19 @@ class GeolocateControl extends Evented {
     }
 
     _onSuccess(position) {
+        //mock position for debug
+        if (this.options.mockPosition && this.options.mockPosition.coords && this.options.mockPosition.floor) {
+            position.coords.latitude = this.options.mockPosition.coords[0];
+            position.coords.longitude = this.options.mockPosition.coords[1];           
+            position.floor = this.options.mockPosition.floor;
+        }
+
         if (this.options.trackUserLocation) {
             // keep a record of the position so that if the state is BACKGROUND and the user
             // clicks the button, we can move to ACTIVE_LOCK immediately without waiting for
             // watchPosition to trigger _onSuccess
+
+
             this._lastKnownPosition = position;
 
             switch (this._watchState) {
@@ -156,6 +165,8 @@ class GeolocateControl extends Evented {
         if (this.options.showUserLocation) {
             this._dotElement.classList.remove('mapboxgl-user-location-dot-stale');
         }
+
+        
 
         this.fire('geolocate', position);
 
@@ -281,7 +292,9 @@ class GeolocateControl extends Evented {
             });
         }
 
-        this._debugBox = DOM.create('span','', this._container);
+        if (this.options.debug) {
+           this._debugBox = DOM.create('span','', this._container); 
+        }      
     }
 
     _onClickGeolocate() {
@@ -382,10 +395,12 @@ class GeolocateControl extends Evented {
     }
 
     _updateDebugInfo(position) {
-        this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
+        if (this._debugBox) {
+            this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
                              Floor: ${position.coords.floor}, Accuracy: ${position.coords.accuracy}, 
                              Alt accuracy: ${position.coords.altitudeAccuracy}, Heading: ${position.coords.heading}, 
                              Speed: ${position.coords.speed}`;
+        }       
     }
 }
 

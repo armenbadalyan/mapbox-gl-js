@@ -275,8 +275,10 @@ class IndoorGeolocateControl extends Evented {
                 }
             });
         }
-
-        this._debugBox = DOM.create('span','', this._container);
+        if (this.options.debug) {
+            this._debugBox = DOM.create('span','', this._container);
+        }
+        
     }
 
     _onClickGeolocate() {
@@ -379,10 +381,12 @@ class IndoorGeolocateControl extends Evented {
     }
 
     _updateDebugInfo(position) {
-        this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
+        if (this._debugBox) {
+            this._debugBox.innerHTML = ` Lat: ${position.coords.latitude} , Lon: ${position.coords.longitude}, 
                              Floor: ${position.coords.floor}, Accuracy: ${position.coords.accuracy}, 
                              Alt accuracy: ${position.coords.altitudeAccuracy}, Heading: ${position.coords.heading}, 
                              Speed: ${position.coords.speed}`;
+        }       
     }
 
 }
