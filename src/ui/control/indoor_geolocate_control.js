@@ -65,6 +65,7 @@ class IndoorGeolocateControl extends Evented {
         this.options = util.extend({}, defaultOptions, options);
         this.options.fitBoundsOptions = util.extend({}, defaultOptions, options);
         this._lastKnownFloor = 0;
+        this._locationDenied = false;
 
 
         util.bindAll([
@@ -74,7 +75,8 @@ class IndoorGeolocateControl extends Evented {
             '_setupUI',
             '_updateCamera',
             '_updateMarker',
-            '_onClickGeolocate'
+            '_onClickGeolocate',
+            '_attemptGeolocationOnResume'
         ], this);
     }
 
@@ -99,6 +101,8 @@ class IndoorGeolocateControl extends Evented {
 
         this._container.parentNode.removeChild(this._container);
         this._map = undefined;
+
+        window.document.removeEventListener('resume', this._attemptGeolocationOnResume);
     }
 
     _onSuccess(position) {
@@ -106,9 +110,9 @@ class IndoorGeolocateControl extends Evented {
             // keep a record of the position so that if the state is BACKGROUND and the user
             // clicks the button, we can move to ACTIVE_LOCK immediately without waiting for
             // watchPosition to trigger _onSuccess
-            
-            this._lastKnownPosition = position; 
-            position.floor =  position.coords.floor; 
+
+            this._lastKnownPosition = position;
+            position.floor =  position.coords.floor;
 
             switch (this._watchState) {
             case 'WAITING_ACTIVE':
@@ -134,7 +138,7 @@ class IndoorGeolocateControl extends Evented {
         // if showUserLocation and the watch state isn't off then update the marker location
         this._updateMarkerDebounce = _.debounce(this._updateMarker, 1000);
         if (this.options.showUserLocation && this._watchState !== 'OFF') {
-        	this._updateMarkerDebounce(position);
+            this._updateMarkerDebounce(position);
         }
 
         // if in normal mode (not watch mode), or if in watch mode and the state is active watch
@@ -155,7 +159,7 @@ class IndoorGeolocateControl extends Evented {
         }
 
         this._updateDebugInfo(position);
-        
+
         this._finish();
     }
 
@@ -190,6 +194,10 @@ class IndoorGeolocateControl extends Evented {
                 if (this._geolocationWatchID !== undefined) {
                     this._clearWatch();
                 }
+
+                this._locationDenied = true;
+                this._requestLocationServices();
+
             } else {
                 switch (this._watchState) {
                 case 'WAITING_ACTIVE':
@@ -276,9 +284,11 @@ class IndoorGeolocateControl extends Evented {
             });
         }
         if (this.options.debug) {
-            this._debugBox = DOM.create('span','', this._container);
+            this._debugBox = DOM.create('span', '', this._container);
         }
-        
+
+        // listen to resume event to make geolocation attempt after enabling location services
+        window.document.addEventListener('resume', this._attemptGeolocationOnResume, false);
     }
 
     _onClickGeolocate() {
@@ -386,7 +396,29 @@ class IndoorGeolocateControl extends Evented {
                              Floor: ${position.coords.floor}, Accuracy: ${position.coords.accuracy}, 
                              Alt accuracy: ${position.coords.altitudeAccuracy}, Heading: ${position.coords.heading}, 
                              Speed: ${position.coords.speed}`;
-        }       
+        }
+    }
+
+    _requestLocationServices() {
+        if (window.cordova && window.cordova.plugins.locationAccuracy) {
+            window.cordova.plugins.locationAccuracy.canRequest(canRequest => {
+                if (canRequest) {
+                    window.cordova.plugins.locationAccuracy.request(() => {
+                        console.log('Location service enabled');
+                    }, () => {
+                        console.log('Could not enable location services');
+                    });
+                }
+            });
+        }
+    }
+
+    _attemptGeolocationOnResume() {
+        if (this._locationDenied) {
+            this._onClickGeolocate();
+        }
+        // make a single attempt at a time
+        this._locationDenied = false;
     }
 
 }
