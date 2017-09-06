@@ -95,6 +95,9 @@ class GeolocateControl extends Evented {
         this._map = map;
         this._container = DOM.create('div', `${className} ${className}-group`);
         checkGeolocationSupport(this._setupUI);
+        if (this.options.autodetect) {
+            this._onClickGeolocate();
+        }
         return this._container;
     }
 
