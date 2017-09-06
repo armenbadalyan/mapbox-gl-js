@@ -5,7 +5,6 @@ const version: string = require('../package.json').version;
 const Map = require('./ui/map');
 const NavigationControl = require('./ui/control/navigation_control');
 const GeolocateControl = require('./ui/control/geolocate_control');
-const IndoorGeolocateControl = require('./ui/control/indoor_geolocate_control');
 const AttributionControl = require('./ui/control/attribution_control');
 const ScaleControl = require('./ui/control/scale_control');
 const FullscreenControl = require('./ui/control/fullscreen_control');
@@ -29,7 +28,6 @@ module.exports = {
     Map,
     NavigationControl,
     GeolocateControl,
-    IndoorGeolocateControl,
     AttributionControl,
     ScaleControl,
     FullscreenControl,
