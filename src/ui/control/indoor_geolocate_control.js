@@ -83,7 +83,8 @@ class IndoorGeolocateControl extends Evented {
     onAdd(map) {
         this._map = map;
         this._container = DOM.create('div', `${className} ${className}-group`);
-        checkGeolocationSupport(this._setupUI);
+        checkGeolocationSupport(this._setupUI);      
+
         return this._container;
     }
 
@@ -283,6 +284,11 @@ class IndoorGeolocateControl extends Evented {
                 }
             });
         }
+
+        if (this.options.autodetect) {
+            this._onClickGeolocate();
+        }
+        
         if (this.options.debug) {
             this._debugBox = DOM.create('span', '', this._container);
         }

@@ -95,6 +95,7 @@ class GeolocateControl extends Evented {
         this._map = map;
         this._container = DOM.create('div', `${className} ${className}-group`);
         checkGeolocationSupport(this._setupUI);
+        
         return this._container;
     }
 
@@ -281,6 +282,10 @@ class GeolocateControl extends Evented {
                     this.fire('trackuserlocationend');
                 }
             });
+        }
+
+        if (this.options.autodetect) {
+            this._onClickGeolocate();
         }
 
         if (this.options.debug) {
